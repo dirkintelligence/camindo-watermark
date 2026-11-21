@@ -1,0 +1,5 @@
+# build output - binaries are attached to the GitHub releases, not committed
+/dist/
+# never commit keys
+*.key
+.DS_Store

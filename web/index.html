@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Wasserzeichen prüfen</title>
+<style>
+:root {
+	--bg: #f4f5f7; --card: #fff; --text: #1d2330; --muted: #5b6475; --line: #d8dce3;
+	--accent: #2f5fd0; --ok: #1f7a44; --ok-bg: #e6f4ec; --warn: #8a5a00; --warn-bg: #fff4dc;
+	--none: #4a5262; --none-bg: #eef0f3; --err: #a12a2a; --err-bg: #fbe9e9;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #15181e; --card: #1e222a; --text: #e6e8ec; --muted: #9aa3b2; --line: #343a46;
+		--accent: #7fa2ff; --ok: #7fd6a0; --ok-bg: #173323; --warn: #ffd27a; --warn-bg: #3a2f14;
+		--none: #c3c9d4; --none-bg: #262b34; --err: #ff9c9c; --err-bg: #3a1d1d;
+	}
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+	font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 40px 16px 64px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+p.lead { color: var(--muted); margin: 0 0 24px; }
+#drop { display: block; background: var(--card); border: 2px dashed var(--line); border-radius: 12px;
+	padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+#drop:hover, #drop.over { border-color: var(--accent); }
+#drop:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+#drop strong { color: var(--accent); }
+#drop small { display: block; color: var(--muted); margin-top: 6px; }
+#file { position: absolute; width: 1px; height: 1px; opacity: 0; }
+#preview { display: none; max-width: 100%; max-height: 320px; margin: 20px auto 0; border-radius: 8px; }
+#result { margin-top: 20px; border-radius: 12px; padding: 16px 20px; display: none; }
+#result h2 { margin: 0 0 4px; font-size: 1.15rem; }
+#result p { margin: 4px 0 0; }
+#result.found { display: block; background: var(--ok-bg); color: var(--ok); }
+#result.present_unreadable { display: block; background: var(--warn-bg); color: var(--warn); }
+#result.none { display: block; background: var(--none-bg); color: var(--none); }
+#result.error { display: block; background: var(--err-bg); color: var(--err); }
+#result.busy { display: block; background: var(--card); color: var(--muted); }
+.id { font: 600 1.6rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); margin: 8px 0 4px; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 16px; margin: 12px 0 0; font-size: .9rem; }
+dt { color: var(--muted); }
+dd { margin: 0; color: var(--text); }
+footer { margin-top: 32px; color: var(--muted); font-size: .85rem; display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; }
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+	<h1 data-t="title">Wasserzeichen prüfen</h1>
+	<p class="lead" data-t="lead">Laden Sie ein Bild hoch. Wir prüfen, ob es ein unsichtbares Wasserzeichen enthält, und zeigen dessen Kennung an.</p>
+
+	<label id="drop">
+		<input type="file" id="file" accept="image/jpeg,image/png,image/webp,image/gif">
+		<span data-t="drop"><strong>Bild auswählen</strong> oder hierher ziehen</span>
+		<small data-t="formats">JPEG, PNG, WebP oder GIF</small>
+	</label>
+
+	<img id="preview" alt="">
+	<div id="result" role="status" aria-live="polite"></div>
+
+	<footer>
+		<span data-t="privacy">Das Bild wird nur für die Prüfung verarbeitet und nicht gespeichert.</span>
+		<a href="https://github.com/dirkintelligence/camindo-watermark" rel="noopener" data-t="source">Quellcode (AGPL)</a>
+	</footer>
+</main>
+<script>
+(function () {
+	'use strict';
+	var T = {
+		de: {
+			title: 'Wasserzeichen prüfen',
+			lead: 'Laden Sie ein Bild hoch. Wir prüfen, ob es ein unsichtbares Wasserzeichen enthält, und zeigen dessen Kennung an.',
+			drop: '<strong>Bild auswählen</strong> oder hierher ziehen',
+			formats: 'JPEG, PNG, WebP oder GIF',
+			privacy: 'Das Bild wird nur für die Prüfung verarbeitet und nicht gespeichert.',
+			source: 'Quellcode (AGPL)',
+			busy: 'Bild wird geprüft …',
+			found: 'Wasserzeichen gefunden',
+			foundText: 'Das Bild trägt die Kennung:',
+			present_unreadable: 'Wasserzeichen vorhanden, aber nicht lesbar',
+			present_unreadableText: 'Das Bild enthält Spuren eines Wasserzeichens. Die Kennung lässt sich nicht sicher lesen (z. B. nach starker Bearbeitung).',
+			none: 'Kein Wasserzeichen gefunden',
+			noneText: 'Das Bild trägt kein Wasserzeichen oder wurde zu stark verändert (z. B. stark zugeschnitten oder sehr stark verkleinert).',
+			synced: 'Lage im Bild',
+			syncedText: 'über das Synchronisationsmuster ermittelt (Bild zugeschnitten, gedreht oder eingefügt)',
+			error: 'Fehler',
+			confidence: 'Signalstärke',
+			size: 'Bildgröße',
+			orientation: 'Ausrichtung',
+			corrected: 'korrigierte Bits',
+			number: 'Zahlenwert',
+			o: {
+				'none': 'unverändert', 'mirrored horizontally': 'horizontal gespiegelt',
+				'mirrored vertically': 'vertikal gespiegelt', 'rotated 180°': 'um 180° gedreht',
+				'transposed': 'transponiert', 'rotated 90° clockwise': 'um 90° im Uhrzeigersinn gedreht',
+				'rotated 90° counter-clockwise': 'um 90° gegen den Uhrzeigersinn gedreht', 'transverse': 'quer gespiegelt'
+			}
+		},
+		en: {
+			title: 'Check watermark',
+			lead: 'Upload an image. We check whether it contains an invisible watermark and show its ID.',
+			drop: '<strong>Choose an image</strong> or drop it here',
+			formats: 'JPEG, PNG, WebP or GIF',
+			privacy: 'The image is only processed for the check and is not stored.',
+			source: 'Source code (AGPL)',
+			busy: 'Checking image …',
+			found: 'Watermark found',
+			foundText: 'The image carries the ID:',
+			present_unreadable: 'Watermark present but unreadable',
+			present_unreadableText: 'The image contains traces of a watermark, but the ID cannot be read reliably (e.g. after heavy editing).',
+			none: 'No watermark found',
+			noneText: 'The image carries no watermark or was changed too much (e.g. cropped heavily or scaled down very strongly).',
+			synced: 'Position',
+			syncedText: 'found via the synchronization pattern (image cropped, rotated or pasted)',
+			error: 'Error',
+			confidence: 'Signal strength',
+			size: 'Image size',
+			orientation: 'Orientation',
+			corrected: 'corrected bits',
+			number: 'Numeric value',
+			o: {}
+		}
+	};
+	var lang = (navigator.language || 'de').slice(0, 2) === 'de' ? 'de' : 'en';
+	var t = T[lang];
+	document.documentElement.lang = lang;
+	document.title = t.title;
+	document.querySelectorAll('[data-t]').forEach(function (el) { el.innerHTML = t[el.getAttribute('data-t')]; });
+
+	var endpoint = 'detect.php';
+	var drop = document.getElementById('drop');
+	var input = document.getElementById('file');
+	var preview = document.getElementById('preview');
+	var result = document.getElementById('result');
+	var objectUrl = null;
+
+	function el(tag, text, cls) {
+		var e = document.createElement(tag);
+		if (text !== undefined) e.textContent = text;
+		if (cls) e.className = cls;
+		return e;
+	}
+
+	function show(state, nodes) {
+		result.className = state;
+		result.replaceChildren.apply(result, nodes);
+	}
+
+	function render(r) {
+		if (!r || r.status === 'error') {
+			show('error', [el('h2', t.error), el('p', (r && r.error) || 'unknown error')]);
+			return;
+		}
+		var nodes = [el('h2', t[r.status] || r.status)];
+		if (r.status === 'found') {
+			nodes.push(el('p', t.foundText), el('div', r.code !== undefined ? r.code : String(r.id), 'id'));
+		} else {
+			nodes.push(el('p', t[r.status + 'Text'] || ''));
+		}
+		var dl = el('dl');
+		function row(k, v) { dl.append(el('dt', k), el('dd', v)); }
+		row(t.confidence, r.confidence.toFixed(1));
+		row(t.size, r.width + ' × ' + r.height + ' px');
+		if (r.status === 'found') {
+			if (r.code !== undefined) row(t.number, String(r.id));
+			if (r.rotation_deg) {
+				var d = Math.abs(r.rotation_deg).toFixed(1);
+				row(t.orientation, lang === 'de'
+					? 'um ' + d.replace('.', ',') + '° ' + (r.rotation_deg > 0 ? 'im' : 'gegen den') + ' Uhrzeigersinn gedreht'
+					: 'rotated ' + d + '° ' + (r.rotation_deg > 0 ? 'clockwise' : 'counter-clockwise'));
+			} else {
+				row(t.orientation, t.o[r.orientation] || r.orientation);
+			}
+			if (r.synced) row(t.synced, t.syncedText);
+			if (r.corrected_bits) row(t.corrected, String(r.corrected_bits));
+		}
+		nodes.push(dl);
+		show(r.status, nodes);
+	}
+
+	function check(file) {
+		if (!file) return;
+		if (objectUrl) URL.revokeObjectURL(objectUrl);
+		objectUrl = URL.createObjectURL(file);
+		preview.src = objectUrl;
+		preview.style.display = 'block';
+		show('busy', [el('p', t.busy)]);
+		var fd = new FormData();
+		fd.append('image', file);
+		fetch(endpoint, { method: 'POST', body: fd })
+			.then(function (res) { return res.json().catch(function () { return { status: 'error', error: 'HTTP ' + res.status }; }); })
+			.then(render)
+			.catch(function (e) { render({ status: 'error', error: e.message }); });
+	}
+
+	input.addEventListener('change', function () { check(input.files[0]); input.value = ''; });
+	['dragenter', 'dragover'].forEach(function (ev) {
+		drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); });
+	});
+	['dragleave', 'drop'].forEach(function (ev) {
+		drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); });
+	});
+	drop.addEventListener('drop', function (e) { check(e.dataTransfer.files[0]); });
+})();
+</script>
+</body>
+</html>

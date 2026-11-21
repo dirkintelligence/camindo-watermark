@@ -1,0 +1,37 @@
+# Format, vet and tests on every push and pull request; builds the release targets
+# as a check (nothing is published).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: camindo-watermark
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: camindo-watermark
+      # the library next to it, for the replace directive in go.mod during development
+      - uses: actions/checkout@v4
+        with:
+          repository: andreasmayercode/image-watermark
+          path: image-watermark
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: camindo-watermark/go.mod
+          cache-dependency-path: camindo-watermark/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Build all targets
+        run: |
+          for t in linux/amd64 linux/arm64 darwin/arm64 windows/amd64; do
+            CGO_ENABLED=0 GOOS=${t%/*} GOARCH=${t#*/} go build -trimpath -o /dev/null .
+          done
