@@ -7,7 +7,7 @@ import (
 )
 
 // Codes: up to six characters from A–Z and "-" (one per camindo instance, e.g.
-// GS-NRD). Each character is a digit 1–27 in base 28 (0 = no character),
+// DR-CAM). Each character is a digit 1–27 in base 28 (0 = no character),
 // left-aligned: 28^6 = 481 890 304 values fit into the 32-bit payload (27^7
 // would not, so six is the maximum).
 const (
@@ -22,7 +22,7 @@ type code struct{}
 func (code) Name() string { return "code" }
 
 func (code) Usage() string {
-	return `code to hide: 1–6 characters A–Z and "-", e.g. GS-NRD (lower case is converted)`
+	return `code to hide: 1–6 characters A–Z and "-", e.g. DR-CAM (lower case is converted)`
 }
 
 func (code) Encode(text string) (uint32, error) { return codeToID(text) }

@@ -42,11 +42,11 @@ func TestCodeRoundTrip(t *testing.T) {
 }
 
 func TestCodec(t *testing.T) {
-	id, err := code{}.Encode("gs-nrd")
+	id, err := code{}.Encode("dr-cam")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s, ok := (code{}).Decode(id); !ok || s != "GS-NRD" {
+	if s, ok := (code{}).Decode(id); !ok || s != "DR-CAM" {
 		t.Errorf("decode %d = %q %v", id, s, ok)
 	}
 	if _, ok := (code{}).Decode(4294967295); ok {

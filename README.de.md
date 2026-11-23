@@ -14,7 +14,7 @@ stammt aus der eigenständigen, CMS-unabhängigen Bibliothek image-watermark, di
 eigenen Autoren in einem eigenen Repository entwickeln; siehe deren README.
 camindo-watermark ist ein schlankes Programm darauf und ergänzt:
 
-- **Codes statt Zahlen:** `-code GS-NRD` speichert einen Code aus 1–6 Zeichen,
+- **Codes statt Zahlen:** `-code DR-CAM` speichert einen Code aus 1–6 Zeichen,
   Großbuchstaben A–Z und `-` (Kleinbuchstaben werden umgewandelt) – in camindo CMS ein
   Code je Instanz. Jedes Zeichen ist eine Ziffer 1–27 zur Basis 28 (0 = kein Zeichen),
   linksbündig: 28⁶ = 481 890 304 Codes passen genau in die 32 Bit der Kennung, ein Code
@@ -32,7 +32,7 @@ je Plattform ein Archiv mit Programm, Prüf-Website (`web/`), Lizenz und Prüfsu
 (`SHA256SUMS`).
 
 ```
-camindo-watermark embed  -in foto.jpg -out foto-wm.jpg -code GS-NRD -key-file watermark.key
+camindo-watermark embed  -in foto.jpg -out foto-wm.jpg -code DR-CAM -key-file watermark.key
 camindo-watermark detect -in verdacht.jpg -key-file watermark.key
 camindo-watermark serve  -listen 127.0.0.1:8080 -key-file watermark.key
 ```
@@ -67,13 +67,13 @@ Der Schlüssel kommt per `-key-file` (empfohlen), über die Umgebungsvariable
 ### Einbinden in die Bildbearbeitung
 
 ```bash
-camindo-watermark embed -in upload.jpg -out upload.jpg -code GS-NRD \
+camindo-watermark embed -in upload.jpg -out upload.jpg -code DR-CAM \
     -key-file ~/watermark/private/watermark.key -json
 ```
 
 - Das Wasserzeichen in das **ausgelieferte** Bild einbetten bzw. in das größte.
   Daraus abgeleitete kleinere Fassungen ab ~400 px behalten es.
-- `-code GS-NRD` speichert einen Code (siehe oben), `-id` eine Zahl.
+- `-code DR-CAM` speichert einen Code (siehe oben), `-id` eine Zahl.
 - `-in`/`-out` dürfen dieselbe Datei sein (wird atomar ersetzt) oder `-` für
   stdin/stdout. Eingabe JPEG, PNG, GIF, WebP; Ausgabe nach Endung `.jpg`/`.png`.
 - EXIF, ICC-Profil, XMP und IPTC bleiben bei JPEG erhalten.
@@ -86,7 +86,7 @@ camindo-watermark embed -in upload.jpg -out upload.jpg -code GS-NRD \
 JSON-Ausgabe von `embed -json`:
 
 ```json
-{"ok":true,"id":132755228,"code":"GS-NRD","width":1920,"height":1280,"verified":true,"confidence":8.53,
+{"ok":true,"id":80500377,"code":"DR-CAM","width":1920,"height":1280,"verified":true,"confidence":8.53,
  "texture":0.51,"delta_rms":3.18,"psnr_db":38.08,"sync_confidence":24.1}
 ```
 
@@ -99,14 +99,14 @@ camindo-watermark detect -in bild.jpg -key-file … [-json] [-v]
 Exit-Code 0 = gefunden, 1 = nicht gefunden, 2 = Fehler.
 
 ```json
-{"status":"found","found":true,"id":132755228,"code":"GS-NRD","confidence":8.99,"crc_ok":true,
+{"status":"found","found":true,"id":80500377,"code":"DR-CAM","confidence":8.99,"crc_ok":true,
  "corrected_bits":0,"min_bit_z":1.35,"orientation":"none","width":960,"height":640}
 ```
 
 Über das Synchronisationsmuster gelesen (hier: Bild um 12° gedreht):
 
 ```json
-{"status":"found","found":true,"id":132755228,"code":"GS-NRD","confidence":8.42,"crc_ok":true,
+{"status":"found","found":true,"id":80500377,"code":"DR-CAM","confidence":8.42,"crc_ok":true,
  "corrected_bits":0,"min_bit_z":1.01,"orientation":"none","width":2146,"height":1654,
  "synced":true,"rotation_deg":12.01,"sync_confidence":24.29}
 ```
