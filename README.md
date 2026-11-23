@@ -1,5 +1,11 @@
 # camindo-watermark
 
+> **Outdated – no longer developed.** From camindo CMS 9.1.11 on, camindo uses the program
+> [image-watermark](https://github.com/andreasmayercode/image-watermark) (1.0.0 or later)
+> directly with `-namespace camindo-watermark` and converts the codes itself (now also with
+> the digits 0–9). Images marked with camindo-watermark keep their code. Please install
+> image-watermark instead of this program.
+
 [Deutsche Fassung](README.de.md)
 
 The [camindo CMS](https://camindo.de) integration of the invisible image watermark
