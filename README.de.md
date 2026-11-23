@@ -1,6 +1,6 @@
 # camindo-watermark
 
-> **Veraltet – wird nicht mehr weiterentwickelt.** Ab camindo CMS 9.1.11 verwendet camindo
+> **Veraltet – wird nicht mehr weiterentwickelt.** Ab camindo CMS 9.2.0 verwendet camindo
 > das Programm [image-watermark](https://github.com/andreasmayercode/image-watermark) (ab 1.0.0)
 > direkt mit `-namespace camindo-watermark` und rechnet die Codes selbst um (jetzt auch mit den
 > Ziffern 0–9). Mit camindo-watermark markierte Bilder behalten ihren Code. Bitte installieren
